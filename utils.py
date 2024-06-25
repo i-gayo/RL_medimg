@@ -7,7 +7,7 @@ matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt 
 import pandas as pd 
 #from augment import transform 
-
+import torchvision 
 class CancerDataset(torch.utils.data.Dataset):
     
     def __init__(self, 
@@ -145,5 +145,49 @@ if __name__ == '__main__':
     
     img, label, patient = cancer_ds[0]
     
+    
+    def get_patch(img, x_idx, y_idx, patch_size = 30):
+        """
+        
+        """
+        img_size = img.size()
+        assert x_idx <= img_size[0] - patch_size
+        assert y_idx <= img_size[1] - patch_size 
+        
+        patch = img[x_idx:x_idx+patch_size, y_idx:y_idx+patch_size]
+        
+        return patch
+    
+    # Original patch     
+    x_idx = 0
+    y_idx = 0 
+    patch_size = 30 
+
+    # Old patch 
+    actions = [1, 1,0] 
+    new_x_idx = x_idx + actions[0]*patch_size
+    new_y_idx = y_idx + actions[1]*patch_size
+    
+    old_img_patch = get_patch(img, 
+              x_idx, 
+              y_idx,
+              patch_size)
+    
+    new_img_patch = get_patch(img, 
+                          new_x_idx, 
+                          new_y_idx,
+                          patch_size)
+    
+    # Keep history of previously visited states 
+    visited_states = torch.zeros_like(img)
+    visited_states[x_idx:x_idx+patch_size, y_idx:y_idx+patch_size] = 1.0 
+    visited_states[new_x_idx:new_x_idx+patch_size, new_y_idx:new_y_idx+patch_size] = 1.0
+    resize = torchvision.transforms.Resize((patch_size, patch_size))
+    resize_visited_states = resize(visited_states.unsqueeze(0)).squeeze()
+
+    
+    fig, axs = plt.subplots(1,2)
+    axs[0].imshow(old_img_patch)
+    axs[1].imshow(new_img_patch)
     
     print('fuecoco')
